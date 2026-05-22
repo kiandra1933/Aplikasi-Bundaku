@@ -1,0 +1,21 @@
+{
+  "name": "Bundaku App",
+  "short_name": "Bundaku",
+  "description": "Aplikasi manajemen harian ala milenial",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff1f2",
+  "theme_color": "#f472b6",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

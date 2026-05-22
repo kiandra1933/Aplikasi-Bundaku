@@ -1,0 +1,335 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundaku App - Pink & Tosca Edition</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#fb7185">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #fff1f2 0%, #f0fdfa 100%); 
+            font-family: 'Segoe UI', sans-serif; 
+            min-height: 100vh;
+        }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.6); 
+            backdrop-filter: blur(15px);
+            border-radius: 28px; 
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .glow-hover:active {
+            box-shadow: 0 0 20px 6px rgba(244, 114, 182, 0.3);
+            transform: scale(0.95);
+        }
+        .gradient-text { 
+            background: linear-gradient(45deg, #f472b6, #2dd4bf); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        section { display: none; }
+        section.active-section { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); }
+        .modal.active { display: flex; align-items: center; justify-content: center; padding: 20px; }
+    </style>
+</head>
+<body class="text-stone-800 pb-28">
+
+    <div id="recipe-modal" class="modal">
+        <div class="glass-card w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-xl bg-rose-100 text-rose-500 w-8 h-8 rounded-full">✕</button>
+            <h2 id="modal-title" class="text-2xl font-bold gradient-text mb-4"></h2>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-bold text-teal-600">🛒 Bahan-Bahan:</h3>
+                    <div id="modal-ingredients" class="text-sm text-stone-600 mt-2 leading-relaxed bg-teal-50 p-3 rounded-2xl"></div>
+                </div>
+                <div>
+                    <h3 class="font-bold text-rose-500">🍳 Cara Memasak:</h3>
+                    <div id="modal-steps" class="text-sm text-stone-700 mt-2 leading-relaxed space-y-2 bg-rose-50 p-3 rounded-2xl"></div>
+                </div>
+                <div class="pt-4 border-t border-teal-100">
+                    <p class="text-sm font-semibold text-stone-500 mb-2">Jadwalkan untuk:</p>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="addToReminderFromModal('Sarapan')" class="bg-amber-100 text-amber-700 p-2 rounded-xl text-xs font-bold hover:scale-105 transition">☀️ Sarapan</button>
+                        <button onclick="addToReminderFromModal('Makan Siang')" class="bg-teal-100 text-teal-700 p-2 rounded-xl text-xs font-bold hover:scale-105 transition">☀️ Siang</button>
+                        <button onclick="addToReminderFromModal('Makan Malam')" class="bg-indigo-100 text-indigo-700 p-2 rounded-xl text-xs font-bold hover:scale-105 transition">🌙 Malam</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header class="p-6 pb-2">
+        <h1 class="text-3xl font-bold gradient-text">Bundaku App ✨</h1>
+        <p class="text-stone-500 text-sm">Hello, Happy Mom! Apa rencana hari ini?</p>
+    </header>
+
+    <main id="app-container" class="px-4 mt-2">
+        <section id="view-home" class="active-section space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-card glow-hover p-5 text-center cursor-pointer border-rose-100" onclick="showSection('view-shop')"><span class="text-3xl">🛒</span><p class="font-bold mt-2 text-xs">Belanja</p></div>
+                <div class="glass-card glow-hover p-5 text-center cursor-pointer border-teal-100" onclick="showSection('view-pantry')"><span class="text-3xl">📦</span><p class="font-bold mt-2 text-xs">Pantry</p></div>
+                <div class="glass-card glow-hover p-5 text-center cursor-pointer border-sky-100" onclick="showSection('view-bills')"><span class="text-3xl">💳</span><p class="font-bold mt-2 text-xs">Tagihan</p></div>
+                <div class="glass-card glow-hover p-5 text-center cursor-pointer border-rose-100" onclick="showSection('view-recipes')"><span class="text-3xl">🍳</span><p class="font-bold mt-2 text-xs">Resep</p></div>
+                <div class="glass-card glow-hover p-5 text-center cursor-pointer col-span-2 border-indigo-100" onclick="showSection('view-reminders')"><span class="text-4xl">📅</span><p class="font-bold mt-2 text-sm">Jadwal Masak</p></div>
+                <div class="glass-card glow-hover p-5 text-center cursor-pointer col-span-2 bg-gradient-to-r from-rose-50 to-teal-50" onclick="showSection('view-backup')"><span class="text-4xl">💾</span><p class="font-bold mt-2 text-sm">Kelola Data & Backup</p></div>
+            </div>
+        </section>
+
+        <section id="view-shop">
+            <h2 class="font-bold text-lg mb-4 text-rose-500">Daftar Belanja 🛒</h2>
+            <div class="glass-card p-4 space-y-2 mb-4">
+                <input type="text" id="shop-input" placeholder="Nama barang" class="w-full p-3 rounded-xl bg-white/50 border border-white">
+                <input type="text" id="shop-qty" placeholder="Jumlah (misal: 1 kg)" class="w-full p-3 rounded-xl bg-white/50 border border-white">
+                <button onclick="addItem('shop')" class="w-full bg-rose-400 text-white p-3 rounded-xl font-bold hover:bg-rose-500 transition">Tambah</button>
+            </div>
+            <div id="shop-list" class="space-y-2"></div>
+        </section>
+
+        <section id="view-pantry">
+            <h2 class="font-bold text-lg mb-4 text-teal-600">Pantry 📦</h2>
+            <div class="glass-card p-4 space-y-2 mb-4">
+                <input type="text" id="pantry-input" placeholder="Nama barang" class="w-full p-3 rounded-xl bg-white/50 border border-white">
+                <input type="text" id="pantry-qty" placeholder="Jumlah stok" class="w-full p-3 rounded-xl bg-white/50 border border-white">
+                <button onclick="addItem('pantry')" class="w-full bg-teal-500 text-white p-3 rounded-xl font-bold hover:bg-teal-600 transition">Tambah</button>
+            </div>
+            <div id="pantry-list" class="space-y-2"></div>
+        </section>
+
+        <section id="view-bills">
+            <h2 class="font-bold text-lg mb-4 text-sky-500">Tagihan 💳</h2>
+            <div class="glass-card p-4 space-y-2 mb-4">
+                <input type="text" id="bill-input" placeholder="Nama tagihan" class="w-full p-3 rounded-xl bg-white/50 border border-white">
+                <input type="text" id="bill-amount" placeholder="Nominal (Rp)" class="w-full p-3 rounded-xl bg-white/50 border border-white">
+                <input type="date" id="bill-date" class="w-full p-3 rounded-xl bg-white/50 border border-white">
+                <button onclick="addItem('bill')" class="w-full bg-sky-500 text-white p-3 rounded-xl font-bold hover:bg-sky-600 transition">Tambah</button>
+            </div>
+            <div id="bill-list" class="space-y-2"></div>
+        </section>
+
+        <section id="view-recipes">
+            <h2 class="font-bold text-lg mb-4 text-rose-500">Ide Masak 🍳</h2>
+            <div id="recipe-list" class="space-y-4 pb-10"></div>
+        </section>
+
+        <section id="view-reminders">
+            <h2 class="font-bold text-lg mb-4 text-indigo-500">Jadwal Masak 📅</h2>
+            <div id="reminder-list" class="space-y-4 pb-10"></div>
+        </section>
+
+        <section id="view-backup">
+            <h2 class="font-bold text-lg mb-4 text-teal-600">Kelola Data 💾</h2>
+            <div class="glass-card p-6 space-y-4">
+                <button id="downloadBtn" onclick="exportData()" class="w-full bg-teal-500 text-white p-4 rounded-2xl font-bold hover:bg-teal-600 transition shadow-lg">Download Backup (.json)</button>
+                <button onclick="document.getElementById('importFile').click()" class="w-full bg-stone-500 text-white p-4 rounded-2xl font-bold hover:bg-stone-600 transition">Upload Backup</button>
+                <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+            </div>
+        </section>
+    </main>
+
+    <nav class="fixed bottom-0 w-full max-w-md left-1/2 -translate-x-1/2 bg-white/70 backdrop-blur-2xl border-t border-rose-100 flex justify-around p-4 z-50 rounded-t-3xl shadow-2xl">
+        <button onclick="showSection('view-home')" class="p-2 glow-hover">🏠</button>
+        <button onclick="showSection('view-shop')" class="p-2 glow-hover">🛒</button>
+        <button onclick="showSection('view-bills')" class="p-2 glow-hover">💳</button>
+        <button onclick="showSection('view-recipes')" class="p-2 glow-hover">🍳</button>
+        <button onclick="showSection('view-reminders')" class="p-2 glow-hover">📅</button>
+    </nav>
+
+    <script>
+        const recipes = [
+            { name: "Nasi Goreng Spesial", ingredients: "Nasi, telur, bakso, kecap manis, bawang putih.", steps: "1. Haluskan bumbu. 2. Tumis hingga harum. 3. Masukkan telur, orak-arik. 4. Masukkan nasi dan bumbu. 5. Aduk hingga matang merata." },
+            { name: "Sop Ayam Bening", ingredients: "Ayam, wortel, kentang, seledri, bumbu sop.", steps: "1. Rebus ayam hingga empuk. 2. Masukkan bumbu dan sayuran. 3. Masak hingga sayur matang. 4. Sajikan panas." },
+            { name: "Ayam Goreng Lengkuas", ingredients: "Ayam, lengkuas parut, bumbu halus.", steps: "1. Ungkep ayam dengan bumbu. 2. Pisahkan bumbu. 3. Goreng ayam. 4. Goreng sisa bumbu hingga garing." },
+            { name: "Balado Telur", ingredients: "Telur rebus, cabai, tomat, bawang.", steps: "1. Goreng telur. 2. Tumis bumbu halus. 3. Masukkan telur, masak hingga meresap." },
+            { name: "Tumis Kangkung", ingredients: "Kangkung, bawang putih, cabai, saus tiram.", steps: "1. Tumis bawang dan cabai. 2. Masukkan kangkung. 3. Tambahkan saus tiram, masak cepat." },
+            { name: "Sayur Asem", ingredients: "Labu siam, jagung, kacang panjang, asam jawa.", steps: "1. Rebus air, masukkan bumbu. 2. Masukkan sayur. 3. Tambahkan asam jawa, masak hingga matang." },
+            { name: "Tempe Orek", ingredients: "Tempe, kecap, bawang.", steps: "1. Goreng tempe. 2. Tumis bumbu. 3. Masukkan tempe dan kecap, aduk rata." },
+            { name: "Ikan Bakar", ingredients: "Ikan, kecap, bumbu halus.", steps: "1. Lumuri ikan dengan bumbu. 2. Bakar di teflon hingga matang." },
+            { name: "Sayur Lodeh", ingredients: "Labu, terong, santan.", steps: "1. Rebus sayuran. 2. Tuang santan, aduk hingga mendidih." },
+            { name: "Opor Ayam", ingredients: "Ayam, santan, serai.", steps: "1. Tumis bumbu. 2. Masukkan ayam. 3. Tambahkan santan, masak hingga meresap." },
+            { name: "Rendang Sapi", ingredients: "Daging, santan, bumbu rendang.", steps: "1. Masak santan dan bumbu. 2. Masukkan daging. 3. Aduk terus hingga mengering." },
+            { name: "Semur Daging", ingredients: "Daging, kecap, pala.", steps: "1. Tumis bumbu. 2. Masukkan daging. 3. Tambahkan kecap dan pala, masak hingga empuk." },
+            { name: "Tahu Gejrot", ingredients: "Tahu pong, gula jawa, asam jawa.", steps: "1. Rebus kuah gula. 2. Ulek bumbu. 3. Siram kuah ke tahu." },
+            { name: "Soto Ayam", ingredients: "Ayam, soun, tauge, koya.", steps: "1. Rebus ayam. 2. Tumis bumbu soto. 3. Sajikan dengan pelengkap." },
+            { name: "Mie Goreng", ingredients: "Mie, sayuran, bakso, kecap.", steps: "1. Tumis bumbu. 2. Masukkan mie dan sayuran. 3. Masak hingga matang." },
+            { name: "Capcay Sayur", ingredients: "Wortel, kembang kol, bakso.", steps: "1. Tumis bawang putih. 2. Masukkan sayuran. 3. Bumbui dan masak cepat." },
+            { name: "Sambal Goreng Ati", ingredients: "Ati ayam, kentang, santan.", steps: "1. Goreng ati dan kentang. 2. Tumis bumbu. 3. Masak dengan santan." },
+            { name: "Gudeg Nangka", ingredients: "Nangka, santan, gula merah.", steps: "1. Masak nangka dengan santan dan bumbu dalam waktu lama." },
+            { name: "Pecel Sayur", ingredients: "Sayuran, bumbu kacang.", steps: "1. Rebus sayur. 2. Siram dengan bumbu kacang." },
+            { name: "Gado-gado", ingredients: "Sayuran, telur, bumbu kacang.", steps: "1. Rebus sayur. 2. Haluskan bumbu. 3. Sajikan dengan siraman bumbu." },
+            { name: "Rawon Daging", ingredients: "Daging, kluwek.", steps: "1. Tumis bumbu kluwek. 2. Masak dengan daging hingga empuk." },
+            { name: "Bakwan Jagung", ingredients: "Jagung, tepung, telur.", steps: "1. Campur bahan. 2. Goreng sesendok hingga cokelat." },
+            { name: "Pepes Ikan", ingredients: "Ikan, kemangi, bumbu.", steps: "1. Bungkus ikan dengan daun pisang. 2. Kukus hingga matang." },
+            { name: "Telur Dadar", ingredients: "Telur, tepung, daun bawang.", steps: "1. Campur telur dan bumbu. 2. Goreng hingga tebal." },
+            { name: "Sayur Bayam", ingredients: "Bayam, kunci, jagung.", steps: "1. Rebus kunci dan jagung. 2. Masukkan bayam sebentar saja." },
+            { name: "Sate Kambing", ingredients: "Daging kambing, kecap, merica.", steps: "1. Tusuk daging. 2. Bakar hingga matang dengan bumbu kecap." },
+            { name: "Gulai Kambing", ingredients: "Daging kambing, santan, bumbu gulai.", steps: "1. Tumis bumbu. 2. Masak kambing dengan santan hingga empuk." },
+            { name: "Tongseng Kambing", ingredients: "Daging kambing, kol, santan.", steps: "1. Tumis bumbu gulai. 2. Masak dengan daging, kol, dan sedikit santan." },
+            { name: "Sop Kambing", ingredients: "Daging kambing, susu evaporasi.", steps: "1. Rebus kambing. 2. Tambahkan susu/santan dan rempah." },
+            { name: "Daging Kambing Lada Hitam", ingredients: "Daging kambing, lada hitam.", steps: "1. Tumis daging dengan saus lada hitam." },
+            { name: "Dendeng Balado", ingredients: "Daging sapi, cabai merah.", steps: "1. Rebus daging, pukul tipis. 2. Goreng. 3. Siram dengan sambal." },
+            { name: "Empal Daging", ingredients: "Daging sapi, santan.", steps: "1. Ungkep daging hingga kering. 2. Goreng sebentar." },
+            { name: "Bakso Sapi", ingredients: "Daging giling, sagu, kaldu.", steps: "1. Buat bola bakso. 2. Rebus dan sajikan dengan kuah kaldu." },
+            { name: "Rawon Sapi", ingredients: "Daging sapi, kluwek.", steps: "1. Masak daging dengan bumbu kluwek hingga empuk." },
+            { name: "Krengsengan Sapi", ingredients: "Daging sapi, petis.", steps: "1. Tumis bumbu. 2. Masak dengan daging dan petis." },
+            { name: "Rendang Sapi", ingredients: "Daging, santan.", steps: "1. Masak santan dan bumbu hingga mengental dan jadi rendang." },
+            { name: "Oseng Mercon", ingredients: "Daging, lemak, cabai.", steps: "1. Tumis daging dengan banyak cabai." },
+            { name: "Sapi Teriyaki", ingredients: "Daging, saus teriyaki.", steps: "1. Tumis daging dengan bumbu teriyaki." },
+            { name: "Iga Bakar Madu", ingredients: "Iga sapi, madu.", steps: "1. Presto iga. 2. Olesi madu. 3. Bakar." },
+            { name: "Sop Iga Sapi", ingredients: "Iga sapi, wortel, kentang.", steps: "1. Rebus iga hingga empuk. 2. Masukkan sayuran." }
+        ];
+
+        let data = JSON.parse(localStorage.getItem('bundaku_data')) || { shop: [], pantry: [], bills: [], reminders: [] };
+
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(s => s.classList.remove('active-section'));
+            document.getElementById(sectionId).classList.add('active-section');
+            renderAll();
+        }
+
+        function addItem(type) {
+            if (type === 'shop') {
+                const item = document.getElementById('shop-input').value;
+                const qty = document.getElementById('shop-qty').value;
+                if (!item) return;
+                data.shop.push({ item, qty });
+                document.getElementById('shop-input').value = '';
+                document.getElementById('shop-qty').value = '';
+            } else if (type === 'pantry') {
+                const item = document.getElementById('pantry-input').value;
+                const qty = document.getElementById('pantry-qty').value;
+                if (!item) return;
+                data.pantry.push({ item, qty });
+                document.getElementById('pantry-input').value = '';
+                document.getElementById('pantry-qty').value = '';
+            } else if (type === 'bill') {
+                const item = document.getElementById('bill-input').value;
+                const amount = document.getElementById('bill-amount').value;
+                const date = document.getElementById('bill-date').value;
+                if (!item) return;
+                data.bills.push({ item, amount, date });
+                document.getElementById('bill-input').value = '';
+                document.getElementById('bill-amount').value = '';
+                document.getElementById('bill-date').value = '';
+            }
+            saveData();
+            renderAll();
+        }
+
+        function saveData() { localStorage.setItem('bundaku_data', JSON.stringify(data)); }
+
+        function deleteItem(type, index) {
+            data[type].splice(index, 1);
+            saveData();
+            renderAll();
+        }
+
+        function openRecipe(index) {
+            const r = recipes[index];
+            document.getElementById('modal-title').innerText = r.name;
+            document.getElementById('modal-ingredients').innerText = r.ingredients;
+            document.getElementById('modal-steps').innerText = r.steps; 
+            document.getElementById('recipe-modal').classList.add('active');
+            window.lastSelectedRecipe = r.name;
+        }
+
+        function closeModal() { document.getElementById('recipe-modal').classList.remove('active'); }
+
+        function addToReminderFromModal(time) {
+            data.reminders.push({ name: window.lastSelectedRecipe, time: time, date: new Date().toLocaleDateString() });
+            saveData();
+            renderAll();
+            closeModal();
+            alert('Berhasil dijadwalkan!');
+        }
+
+        function exportData() {
+            try {
+                const dataStr = JSON.stringify(data, null, 4); 
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const dl = document.createElement('a');
+                dl.href = url;
+                dl.download = "bundaku_backup.json";
+                document.body.appendChild(dl);
+                dl.click();
+                document.body.removeChild(dl);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error("Gagal saat mencoba mengunduh:", err);
+                alert('Gagal mengunduh file, mohon coba lagi!');
+            }
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    data = JSON.parse(e.target.result);
+                    saveData();
+                    renderAll();
+                } catch(e) {
+                    alert('File tidak valid!');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderAll() {
+            document.getElementById('shop-list').innerHTML = data.shop.map((d, i) => `
+                <div class="glass-card p-3 flex justify-between items-center text-sm shadow-sm">
+                    <span><strong>${d.item}</strong> (${d.qty})</span>
+                    <button onclick="deleteItem('shop', ${i})" class="text-rose-400 font-bold">✕</button>
+                </div>
+            `).join('');
+
+            document.getElementById('pantry-list').innerHTML = data.pantry.map((d, i) => `
+                <div class="glass-card p-3 flex justify-between items-center text-sm shadow-sm">
+                    <span><strong>${d.item}</strong> (${d.qty})</span>
+                    <button onclick="deleteItem('pantry', ${i})" class="text-teal-500 font-bold">✕</button>
+                </div>
+            `).join('');
+
+            document.getElementById('bill-list').innerHTML = data.bills.map((d, i) => `
+                <div class="glass-card p-3 text-sm shadow-sm">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-sky-600">${d.item}</span>
+                        <button onclick="deleteItem('bills', ${i})" class="text-sky-400 font-bold">✕</button>
+                    </div>
+                    <p class="text-xs">Rp ${d.amount} | Jatuh Tempo: ${d.date}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('recipe-list').innerHTML = recipes.map((r, i) => `
+                <div class="glass-card p-4 glow-hover border-rose-100">
+                    <h3 class="font-bold text-rose-500">${r.name}</h3>
+                    <button onclick="openRecipe(${i})" class="mt-3 text-xs bg-rose-100 text-rose-600 px-4 py-2 rounded-full w-full font-bold">Detail</button>
+                </div>
+            `).join('');
+
+            document.getElementById('reminder-list').innerHTML = data.reminders.map((d, i) => `
+                <div class="glass-card p-3 flex justify-between items-center text-sm shadow-sm">
+                    <div>
+                        <strong>${d.name}</strong> 
+                        <span class="text-indigo-400 text-xs block">${d.time} - ${d.date}</span>
+                    </div>
+                    <button onclick="deleteItem('reminders', ${i})" class="text-indigo-400 font-bold">✕</button>
+                </div>
+            `).join('');
+        }
+        renderAll();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+            .then(() => console.log('Service Worker berhasil terdaftar!'))
+            .catch((err) => console.log('Pendaftaran gagal: ', err));
+        }
+    </script>
+</body>
+</html>
